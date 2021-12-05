@@ -30,6 +30,10 @@ class User {
             this.password_hash = await bcrypt.hash(this.password, 8);
         }
     }
+
+    async checkPassword(password: string){
+        return await bcrypt.compare(password, this.password_hash);
+    }
 }
 
 export { User };
