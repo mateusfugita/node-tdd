@@ -6,9 +6,18 @@ import { UserRepository } from '../../src/app/repositories/UserRepository';
 import createConnection from '../../src/database';
 
 describe('User', () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
         const connection = await createConnection();
         await connection.runMigrations();
+    });
+
+    afterEach(async () => {
+        const entities = getConnection().entityMetadatas;
+
+        for (const entity of entities) {
+            const repository = getConnection().getRepository(entity.name); // Get repository
+            await repository.clear(); // Clear each entity table's content
+        }
     });
 
     afterAll(async () => {
