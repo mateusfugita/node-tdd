@@ -1,10 +1,9 @@
 import request from 'supertest';
 import { getConnection } from 'typeorm';
-import { getCustomRepository } from 'typeorm';
 
-import { UserRepository } from '../../src/app/repositories/UserRepository';
 import createConnection from '../../src/database';
 import app from '../../src/app';
+import { UserFactory } from '../factories';
 
 describe('Authentication', () => {
     beforeAll(async () => {
@@ -28,13 +27,10 @@ describe('Authentication', () => {
     });
 
     it('should authenticate with valid credentials', async () => {
-        const userRepo = getCustomRepository(UserRepository);
-        const user = userRepo.create({
-            name: 'Dean',
-            email: 'dean@example.com',
+        const userFactory: UserFactory = new UserFactory();
+        const user = await userFactory.create({
             password: '123123'
         });
-        await userRepo.save(user);
 
         const response = await request(app).post('/sessions').send({
             email: user.email,
@@ -45,13 +41,10 @@ describe('Authentication', () => {
     });
 
     it('should not authenticate with invalid credentials', async () => {
-        const userRepo = getCustomRepository(UserRepository);
-        const user = userRepo.create({
-            name: 'Dean',
-            email: 'dean@example.com',
+        const userFactory: UserFactory = new UserFactory();
+        const user = await userFactory.create({
             password: '123123'
         });
-        await userRepo.save(user);
 
         const response = await request(app).post('/sessions').send({
             email: user.email,
@@ -59,5 +52,51 @@ describe('Authentication', () => {
         });
 
         expect(response.status).toBe(401);
-    } )
+    });
+
+    it('should return jwt token when authenticate', async () => {
+        const userFactory: UserFactory = new UserFactory();
+        const user = await userFactory.create({
+            password: '123123'
+        });
+
+        const response = await request(app).post('/sessions').send({
+            email: user.email,
+            password: '123123'
+        });
+
+        expect(response.body).toHaveProperty("token");
+    })
+
+    it('should be able to access private routes when authenticated', async () => {
+        const userFactory: UserFactory = new UserFactory();
+        const user = await userFactory.create({
+            password: '123123'
+        });
+
+        const response = await request(app)
+            .get('/dashboard')
+            .set('Authorization', `Bearer ${user.generateToken()}`);
+
+        expect(response.status).toBe(200);
+    })
+
+    it('should not be able to access private routes without jwt token', async () => {
+        const response = await request(app).get('/dashboard');
+
+        expect(response.status).toBe(401);
+    })
+
+    it('should not be able to access private routes with invalid jwt token', async () => {
+        const userFactory: UserFactory = new UserFactory();
+        const user = await userFactory.create({
+            password: '123123'
+        });
+
+        const response = await request(app)
+            .get('/dashboard')
+            .set('Authorization', `Bearer 123123`);
+
+        expect(response.status).toBe(401);
+    })
 });

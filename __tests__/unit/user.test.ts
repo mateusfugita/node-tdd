@@ -1,9 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { getConnection } from 'typeorm';
 
-import { getCustomRepository } from 'typeorm';
-import { UserRepository } from '../../src/app/repositories/UserRepository';
 import createConnection from '../../src/database';
+import { UserFactory } from '../factories';
 
 describe('User', () => {
     beforeAll(async () => {
@@ -27,13 +26,10 @@ describe('User', () => {
     });
 
     it('should encrypt user password', async () => {
-        const userRepo = getCustomRepository(UserRepository);
-        const user = userRepo.create({
-            name: 'Dean',
-            email: 'dean@example.com',
+        const userFactory: UserFactory = new UserFactory();
+        const user = await userFactory.create({
             password: '123456'
         });
-        await userRepo.save(user);
 
         const compareHash = await bcrypt.compare('123456', user.password_hash);
 
