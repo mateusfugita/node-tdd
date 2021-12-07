@@ -26,6 +26,14 @@ describe('Authentication', () => {
         await connection.close();
     });
 
+    it('should not find user in database', async () => {
+        const response = await request(app).post('/sessions').send({
+            email: 'user@example.com'
+        });
+
+        expect(response.status).toBe(401);
+    })
+
     it('should authenticate with valid credentials', async () => {
         const userFactory: UserFactory = new UserFactory();
         const user = await userFactory.create({
