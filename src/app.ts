@@ -4,14 +4,14 @@ dotenv.config({
 });
 
 import 'reflect-metadata';
-import express from 'express';
+import express, { Express } from 'express';
 import createConnection from './database';
 import { routes } from './routes';
 
 createConnection();
 
 class AppController {
-    express: any;
+    express: Express;
 
     constructor(){
         this.express = express();
