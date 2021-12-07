@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('user')
@@ -33,6 +34,10 @@ class User {
 
     async checkPassword(password: string){
         return await bcrypt.compare(password, this.password_hash);
+    }
+
+    generateToken(){
+        return jwt.sign({ id: this.id }, process.env.APP_SECRET)
     }
 }
 
